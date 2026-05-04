@@ -561,13 +561,13 @@ void antilag_lagmove_all_hitscan(gedict_t *e)
 	else if (ms < 0)
 		ms = 0;
 
-	// FIX 1 (hitscan): Zero out residual ms below 1ms to prevent
-	// incorrect rewind for very low-ping players.
+	// Zero out residual ms below 1ms to prevent incorrect rewind for very low-ping players.
 	if (ms < 0.001)
 		ms = 0;
 
 	antilag_lagmove_all(e, ms);
 }
+
 
 void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 {
@@ -588,9 +588,8 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	else if (ms < 0)
 		ms = 0;
 
-	// FIX 1: Zero out residual ms values (e.g. 0.000013s left after 1/77
-	// subtraction for a 13ms ping player) to prevent an extra loop iteration
-	// that forces a 10ms step via bound(), causing ~60ms offset on low-ping.
+	// FIX 1: Zero out residual ms below 1ms to prevent incorrect rewind
+	// for very low-ping players.
 	if (ms < 0.001)
 		ms = 0;
 
@@ -612,17 +611,15 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 		VectorCopy(list->owner->s.v.velocity, list->held_velocity);
 	}
 
-	///*
 	VectorCopy(owner->s.v.origin, old_org);
 	antilag_lagmove_all_nohold(owner, ms, true);
 	VectorSubtract(owner->s.v.origin, old_org, old_org);
 	VectorAdd(e->s.v.origin, old_org, old_org);
 	trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(old_org));
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	VectorCopy(owner->antilag_data->held_origin, owner->s.v.origin);
-	//*/
 
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	e->s.v.armorvalue = ms;
 
 	oself = self;
@@ -630,13 +627,12 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	step_time = min(cvar("sv_mintic"), ms);
 	if (step_time * VectorLength(e->s.v.velocity) > 3)
 	{
-		// step size * velocity can't be more than player hitbox width, we don't want any shenanigans
 		step_time = 8 / VectorLength(e->s.v.velocity);
 	}
 
 	current_time = g_globalvars.time - ms;
 
-	// FIX 2: newmis block - replace hardcoded 0.05s advance with actual lag
+	// FIX 2: newmis block — replace hardcoded 0.05s advance with actual lag
 	// time. Use 1 frame (1/77s) as minimum so the rocket always spawns just
 	// outside the owner's hitbox. For low-ping (ms==0) this is ~13ms instead
 	// of the previous 50ms, eliminating the offset without breaking anything.
@@ -659,25 +655,19 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 			((void(*)(void))(self->touch))();
 
 			self = oself;
-			antilag_unmove_all(); // emergency antilag cleanup
+			antilag_unmove_all();
 			return;
 		}
 	}
-	//
 
 	// FIX 3: Changed from <= to <. When ms==0, current_time equals
-	// g_globalvars.time exactly, so <= would still run one extra iteration,
-	// forcing step_time to 0.01s via bound() and adding ~10ms of unwanted
-	// offset for low-ping players.
+	// g_globalvars.time exactly, so <= would still run one extra iteration.
 	while (current_time < g_globalvars.time)
 	{
 		time_corrected = current_time;
 
-		// FIX 5: Removed the - 0.01 subtraction from step_time calculation.
-		// Previously, the last step always fell 10ms short of the total lag
-		// time, meaning projectiles for any ping were under-compensated by
-		// ~10ms on the final iteration. Now step_time is clamped to exactly
-		// the remaining time, completing the full compensation.
+		// FIX 5: step_time clamped to exactly the remaining time so the final
+		// iteration covers the full compensation without stopping 10ms short.
 		step_time = bound(0.01, min(step_time, g_globalvars.time - current_time), 0.05);
 
 		if (e->s.v.nextthink) { e->s.v.nextthink -= step_time; }
@@ -702,11 +692,9 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 
 		current_time += step_time;
 	}
-	//
 
 	self = oself;
 
-	// restore origins to held values
 	antilag_unmove_all();
 	time_corrected = g_globalvars.time;
 }
@@ -754,15 +742,13 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 		VectorCopy(list->owner->s.v.velocity, list->held_velocity);
 	}
 
-	///*
 	VectorCopy(owner->s.v.origin, old_org);
 	antilag_lagmove_all_nohold(owner, ms, true);
 	VectorSubtract(owner->s.v.origin, old_org, old_org);
 	VectorAdd(e->s.v.origin, old_org, old_org);
 	trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(old_org));
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	VectorCopy(owner->antilag_data->held_origin, owner->s.v.origin);
-	//*/
 
 	e->s.v.armorvalue = ms;
 
@@ -772,30 +758,23 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	step_time = min(cvar("sv_mintic"), ms);
 	if (step_time * VectorLength(e->s.v.velocity) > 32)
 	{
-		// step size * velocity can't be more than player hitbox width, we don't want any shenanigans
 		step_time = 32 / VectorLength(e->s.v.velocity);
 	}
 
 	current_time = g_globalvars.time - ms;
 
 	// FIX 4: newmis block for bounce — same fix as FIX 2 above.
-	// Replace hardcoded 0.05s with actual lag time, 1 frame minimum,
-	// so grenades also spawn correctly for low-ping players.
 	if (newmis == e)
 	{
 		advance = (ms > 0.0f) ? ms : (1.0f / 77.0f);
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
 		Physics_Bounce(advance);
 	}
-	//
 
-	// actual step through
-	// while already uses < (correct), no change needed here.
+	// while already uses < (correct).
 	while (current_time < g_globalvars.time)
 	{
-		// FIX 5 (bounce): Same last-step fix — remove - 0.01 so the final
-		// iteration covers the full remaining lag time instead of stopping
-		// 10ms short, improving accuracy for all ping levels.
+		// FIX 5 (bounce): same last-step fix.
 		step_time = bound(0.01, min(step_time, g_globalvars.time - current_time), 0.05);
 		
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
@@ -803,10 +782,8 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 		if (self->s.v.nextthink) { self->s.v.nextthink -= step_time; }
 		current_time += step_time;
 	}
-	//
 
 	self = oself;
 
-	// restore origins to held values
 	antilag_unmove_all();
 }
