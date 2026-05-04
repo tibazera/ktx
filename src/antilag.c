@@ -561,13 +561,19 @@ void antilag_lagmove_all_hitscan(gedict_t *e)
 	else if (ms < 0)
 		ms = 0;
 
+	// Zero out residual ms below 1ms to prevent incorrect rewind for very low-ping players.
+	if (ms < 0.001)
+		ms = 0;
+
 	antilag_lagmove_all(e, ms);
 }
+
 
 void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 {
 	float ms = (atof(ezinfokey(owner, "ping")) / 1000);
 	float step_time, current_time;
+	float advance;
 	antilag_t *list;
 	vec3_t old_org;
 	gedict_t *oself;
@@ -582,10 +588,14 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	else if (ms < 0)
 		ms = 0;
 
+	// FIX 1: Zero out residual ms below 1ms to prevent incorrect rewind
+	// for very low-ping players.
+	if (ms < 0.001)
+		ms = 0;
+
 	e->client_time = ms;
 
 	// log hold stats, because we use nohold antilag moving
-	
 	for (list = antilag_list_players; list != NULL; list = list->next)
 	{
 		if (list->owner->s.v.health <= 0)
@@ -601,17 +611,15 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 		VectorCopy(list->owner->s.v.velocity, list->held_velocity);
 	}
 
-	///*
 	VectorCopy(owner->s.v.origin, old_org);
 	antilag_lagmove_all_nohold(owner, ms, true);
 	VectorSubtract(owner->s.v.origin, old_org, old_org);
 	VectorAdd(e->s.v.origin, old_org, old_org);
 	trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(old_org));
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	VectorCopy(owner->antilag_data->held_origin, owner->s.v.origin);
-	//*/
 
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	e->s.v.armorvalue = ms;
 
 	oself = self;
@@ -619,16 +627,24 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	step_time = min(cvar("sv_mintic"), ms);
 	if (step_time * VectorLength(e->s.v.velocity) > 3)
 	{
-		// step size * velocity can't be more than player hitbox width, we don't want any shenanigans
 		step_time = 8 / VectorLength(e->s.v.velocity);
 	}
 
 	current_time = g_globalvars.time - ms;
-	// newmis reimplementation
+
+	// FIX 2: newmis block — replace hardcoded 0.05s advance with actual lag
+	// time. Use 1 frame (1/77s) as minimum so the rocket always spawns just
+	// outside the owner's hitbox. For low-ping (ms==0) this is ~13ms instead
+	// of the previous 50ms, eliminating the offset without breaking anything.
 	if (newmis == e)
 	{
+		advance = (ms > 0.0f) ? ms : (1.0f / 77.0f);
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
-		traceline(PASSVEC3(e->s.v.origin), e->s.v.origin[0] + e->s.v.velocity[0] * 0.05, e->s.v.origin[1] + e->s.v.velocity[1] * 0.05, e->s.v.origin[2] + e->s.v.velocity[2] * 0.05, false, e);
+		traceline(PASSVEC3(e->s.v.origin),
+			e->s.v.origin[0] + e->s.v.velocity[0] * advance,
+			e->s.v.origin[1] + e->s.v.velocity[1] * advance,
+			e->s.v.origin[2] + e->s.v.velocity[2] * advance,
+			false, e);
 		trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(g_globalvars.trace_endpos));
 
 		if (g_globalvars.trace_fraction < 1 || g_globalvars.trace_startsolid)
@@ -639,46 +655,46 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 			((void(*)(void))(self->touch))();
 
 			self = oself;
-			antilag_unmove_all(); // emergency antilag cleanup
+			antilag_unmove_all();
 			return;
 		}
 	}
-	//
 
-	// actual stepping through
-	while (current_time <= g_globalvars.time)
+	// FIX 3: Changed from <= to <. When ms==0, current_time equals
+	// g_globalvars.time exactly, so <= would still run one extra iteration.
+	while (current_time < g_globalvars.time)
 	{
 		time_corrected = current_time;
-		step_time = bound(0.01, min(step_time, (g_globalvars.time - current_time) - 0.01), 0.05);
+
+		// FIX 5: step_time clamped to exactly the remaining time so the final
+		// iteration covers the full compensation without stopping 10ms short.
+		step_time = bound(0.01, min(step_time, g_globalvars.time - current_time), 0.05);
+
 		if (e->s.v.nextthink) { e->s.v.nextthink -= step_time; }
 
-		//antilag_lagmove_all_nohold(owner, (g_globalvars.time - current_time), false);
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
-		traceline(PASSVEC3(e->s.v.origin), e->s.v.origin[0] + e->s.v.velocity[0] * step_time,
-			e->s.v.origin[1] + e->s.v.velocity[1] * step_time, e->s.v.origin[2] + e->s.v.velocity[2] * step_time,
+		traceline(PASSVEC3(e->s.v.origin),
+			e->s.v.origin[0] + e->s.v.velocity[0] * step_time,
+			e->s.v.origin[1] + e->s.v.velocity[1] * step_time,
+			e->s.v.origin[2] + e->s.v.velocity[2] * step_time,
 			false, e);
 
 		trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(g_globalvars.trace_endpos));
 
 		if (g_globalvars.trace_fraction < 1 || g_globalvars.trace_startsolid)
 		{
-			//if (g_globalvars.trace_ent)
-			//{
 			other = PROG_TO_EDICT(g_globalvars.trace_ent);
 			self = e;
 			self->s.v.flags = ((int)self->s.v.flags) | FL_GODMODE;
 			((void(*)(void))(self->touch))();
 			break;
-			//}
 		}
 
 		current_time += step_time;
 	}
-	//
 
 	self = oself;
 
-	// restore origins to held values
 	antilag_unmove_all();
 	time_corrected = g_globalvars.time;
 }
@@ -688,6 +704,7 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 {
 	float ms = (atof(ezinfokey(owner, "ping")) / 1000);
 	float step_time, current_time;
+	float advance;
 	antilag_t *list;
 	vec3_t old_org;
 	gedict_t *oself;
@@ -700,6 +717,11 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	if (ms > ANTILAG_REWIND_MAXPROJECTILE)
 		ms = ANTILAG_REWIND_MAXPROJECTILE;
 	else if (ms < 0)
+		ms = 0;
+
+	// FIX 1: Same residual zeroing as _proj — prevents ghost iterations
+	// for low-ping players on bouncing projectiles (grenades, etc.).
+	if (ms < 0.001)
 		ms = 0;
 
 	e->client_time = ms;
@@ -720,15 +742,13 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 		VectorCopy(list->owner->s.v.velocity, list->held_velocity);
 	}
 
-	///*
 	VectorCopy(owner->s.v.origin, old_org);
 	antilag_lagmove_all_nohold(owner, ms, true);
 	VectorSubtract(owner->s.v.origin, old_org, old_org);
 	VectorAdd(e->s.v.origin, old_org, old_org);
 	trap_setorigin(NUM_FOR_EDICT(e), PASSVEC3(old_org));
-	VectorCopy(e->s.v.origin, e->oldangles); // store for later maybe
+	VectorCopy(e->s.v.origin, e->oldangles);
 	VectorCopy(owner->antilag_data->held_origin, owner->s.v.origin);
-	//*/
 
 	e->s.v.armorvalue = ms;
 
@@ -738,46 +758,32 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	step_time = min(cvar("sv_mintic"), ms);
 	if (step_time * VectorLength(e->s.v.velocity) > 32)
 	{
-		// step size * velocity can't be more than player hitbox width, we don't want any shenanigans
 		step_time = 32 / VectorLength(e->s.v.velocity);
 	}
 
 	current_time = g_globalvars.time - ms;
-	// newmis reimplementation
+
+	// FIX 4: newmis block for bounce — same fix as FIX 2 above.
 	if (newmis == e)
 	{
+		advance = (ms > 0.0f) ? ms : (1.0f / 77.0f);
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
-		Physics_Bounce(0.05);
+		Physics_Bounce(advance);
 	}
-	//
 
-	// actual step through
+	// while already uses < (correct).
 	while (current_time < g_globalvars.time)
 	{
-		step_time = bound(0.01, min(step_time, (g_globalvars.time - current_time) - 0.01), 0.05);
+		// FIX 5 (bounce): same last-step fix.
+		step_time = bound(0.01, min(step_time, g_globalvars.time - current_time), 0.05);
 		
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
 		Physics_Bounce(step_time);
 		if (self->s.v.nextthink) { self->s.v.nextthink -= step_time; }
 		current_time += step_time;
 	}
-	//
 
 	self = oself;
 
-	// restore origins to held values
 	antilag_unmove_all();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
