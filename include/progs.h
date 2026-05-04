@@ -771,7 +771,7 @@ typedef struct fb_entvars_s {
 #endif
 
 #define ANTILAG_REWIND_MAXHITSCAN	 0.250
-#define ANTILAG_REWIND_MAXPROJECTILE 0.150  // increased from 0.080: covers BR players up to ~163ms ping; players below 80ms are unaffected
+#define ANTILAG_REWIND_MAXPROJECTILE 0.080
 #define ANTILAG_TIMESTEP 0.01
 //#define ANTILAG_XERP 0
 #define ANTILAG_MAX_PREDICTION 0.02
@@ -1127,7 +1127,7 @@ typedef struct gedict_s
 	float regen_timer;						// when the regen timer is started
 	float time_of_respawn;					// server time player respawned or round started
 	float seconds_to_respawn;				// number of seconds until respawn
-	float escape_time;					// number of seconds after "escaping"
+	float escape_time;						// number of seconds after "escaping"
 	char *teamcolor;						// color of player's team
 	char cptext[1024];						// centerprint for player
 	char ljteam[1024];						// team that player is requesting to join
