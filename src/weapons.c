@@ -96,6 +96,7 @@ void W_FireAxe(void)
 	traceline(PASSVEC3(source), PASSVEC3(dest), false, self);
 	if (g_globalvars.trace_fraction == 1.0)
 	{
+		antilag_unmove_all();
 		return;
 	}
 
@@ -111,6 +112,7 @@ void W_FireAxe(void)
 		if (isRACE() && (PROG_TO_EDICT(g_globalvars.trace_ent)->ct == ctPlayer)
 				&& (self != PROG_TO_EDICT(g_globalvars.trace_ent)))
 		{
+			antilag_unmove_all();
 			return;
 		}
 
@@ -1164,7 +1166,6 @@ void W_FireLightning(void)
 {
 	vec3_t org;
 	float cells;
-	antilag_lagmove_all_hitscan(self);
 	vec3_t tmp;
 
 	if ((self->s.v.ammo_cells < 1) || (match_in_progress == 1))
@@ -1212,7 +1213,9 @@ void W_FireLightning(void)
 					return;
 				}
 
+				antilag_lagmove_all_hitscan(self);
 				T_RadiusDamage(self, self, 35 * cells, world, dtLG_DIS);
+				antilag_unmove_all();
 
 				return;
 			}
@@ -1229,7 +1232,9 @@ void W_FireLightning(void)
 				return;
 			}
 
+			antilag_lagmove_all_hitscan(self);
 			T_RadiusDamage(self, self, 35 * cells, world, dtLG_DIS);
+			antilag_unmove_all();
 
 			return;
 		}
@@ -1261,6 +1266,7 @@ void W_FireLightning(void)
 	VectorCopy(self->s.v.origin, org);	//org = self->s.v.origin + '0 0 16';
 	org[2] += 16;
 
+	antilag_lagmove_all_hitscan(self);
 	traceline(PASSVEC3(org), org[0] + g_globalvars.v_forward[0] * 600,
 				org[1] + g_globalvars.v_forward[1] * 600, org[2] + g_globalvars.v_forward[2] * 600,
 				true, self);

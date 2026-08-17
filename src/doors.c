@@ -1050,4 +1050,6 @@ void SP_func_door_secret(void)
 	{
 		self->wait = 5;	// 5 seconds before closing
 	}
+
+	self->antilag_data = antilag_create_world(self);
 }

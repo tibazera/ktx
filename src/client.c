@@ -3722,6 +3722,9 @@ void PlayerPreThink(void)
 		BackFromLag();
 	}
 
+	self->client_time += g_globalvars.frametime;
+	self->client_lastupdated = g_globalvars.time;
+
 	if (self->sc_stats && self->sc_stats_time && (self->sc_stats_time <= g_globalvars.time)
 			&& (match_in_progress != 1) && !isRACE())
 	{
