@@ -142,7 +142,7 @@ void Physics_ClipVelocity(float vel_x, float vel_y, float vel_z, float norm_x, f
 	norm[1] = norm_y;
 	norm[2] = norm_z;
 
-	
+
 	VectorScale(norm, DotProduct(vel, norm), vel2);
 	VectorScale(vel2, f, vel2);
 	VectorSubtract(vel, vel2, vel);
@@ -318,12 +318,12 @@ void antilag_delete_world(gedict_t *e)
 void antilag_updateworld(void)
 {
 	antilag_t *list;
-	
+
 	if (g_globalvars.time < antilag_nextthink_world)
 		return;
 
 	antilag_nextthink_world = g_globalvars.time + cvar("sv_mintic");
-	
+
 	for (list = antilag_list_world; list != NULL; list = list->next)
 	{
 		antilag_log(list->owner, list);
@@ -339,7 +339,7 @@ void antilag_lagmove(antilag_t *data, float goal_time)
 
 	//don't rewind past spawns
 	goal_time = max(goal_time, data->owner->spawn_time);
-	
+
 	if (data->owner->client_lastupdated > 0)
 	{
 		if (goal_time > data->owner->client_lastupdated)
@@ -667,7 +667,7 @@ void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e)
 	e->client_time = ms;
 
 	// log hold stats, because we use nohold antilag moving
-	
+
 	for (list = antilag_list_players; list != NULL; list = list->next)
 	{
 		if (list->owner->s.v.health <= 0)
@@ -768,7 +768,7 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 	antilag_t *list;
 	vec3_t old_org;
 	gedict_t *oself;
-	
+
 	if (cvar("sv_antilag") != 1)
 		return;
 
@@ -838,7 +838,7 @@ void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e)
 		step_time = min(step_time, remaining);
 		if (step_time <= 0)
 			break;
-		
+
 		antilag_lagmove_all_playeronly(owner, (g_globalvars.time - current_time));
 		Physics_Bounce(step_time);
 		if (self->s.v.nextthink) { self->s.v.nextthink -= step_time; }
