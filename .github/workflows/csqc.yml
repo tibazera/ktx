@@ -13,12 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install FTEQCC
-        run: sudo apt-get update && sudo apt-get install --yes fteqcc
+      - name: Download current FTEQCC
+        run: |
+          curl -fsSL -o fteqw.zip https://github.com/fte-team/fteqw/releases/download/2025-09-27/fteqw-linux64-c781d13.zip
+          unzip -q fteqw.zip fteqcc64
+          chmod +x fteqcc64
 
       - name: Compile Antilag CSQC
         working-directory: qcsrc
-        run: |
-          sed '/^#define CSQC$/d' progs.src > progs.ci.src
-          fteqcc -DCSQC -srcfile progs.ci.src
-          rm progs.ci.src
+        run: ../fteqcc64 -srcfile progs.src
