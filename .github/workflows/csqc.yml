@@ -1,0 +1,21 @@
+name: CSQC build
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FTEQCC
+        run: sudo apt-get update && sudo apt-get install --yes fteqcc
+
+      - name: Compile Antilag CSQC
+        working-directory: qcsrc
+        run: fteqcc -srcfile progs.src
