@@ -2075,7 +2075,7 @@ void PutClientInServer(void)
 		self->s.v.weapon = W_BestWeapon();
 	W_SetCurrentAmmo();
 
-	self->attack_finished = g_globalvars.time;
+	self->attack_finished = self->client_time;
 	self->th_pain = player_pain;
 	self->th_die = PlayerDie;
 
@@ -4186,7 +4186,7 @@ void PlayerPreThink(void)
 		SetVector(self->s.v.velocity, 0, 0, 0);
 	}
 
-	if ((g_globalvars.time > self->attack_finished) && (self->s.v.currentammo == 0)
+	if ((self->client_time > self->attack_finished) && (self->s.v.currentammo == 0)
 			&& (self->s.v.weapon != IT_AXE) && (self->s.v.weapon != IT_HOOK))
 	{
 		self->s.v.weapon = W_BestWeapon();
@@ -4780,6 +4780,16 @@ void PlayerPostThink(void)
 	if (self->s.v.deadflag)
 	{
 		return;
+	}
+
+	if (self->client_nextthink && self->client_time >= self->client_nextthink)
+	{
+		float held_client_time = self->client_time;
+
+		self->client_time = self->client_nextthink;
+		self->client_nextthink = 0;
+		((void(*)(void))(self->client_think))();
+		self->client_time = held_client_time;
 	}
 
 //team

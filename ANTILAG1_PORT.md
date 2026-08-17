@@ -28,6 +28,24 @@ by default.  Antilag 1 must remain complete and usable without them.
   without per-server configuration.
 * Keep normal Antilag 0/2 behaviour unchanged when `sv_antilag` is not 1.
 
+## Weapon-prediction time contract
+
+Weapon prediction uses a client-relative clock.  The following values must
+therefore remain in that same clock domain: `client_time`,
+`attack_finished`, `client_nextthink`, and the predicted weapon animation
+callback.  The server global clock is retained only to schedule the empty
+server-side animation callback.
+
+Mixing the clocks makes a newly connected client receive a small
+`client_time` together with a large server-global `attack_finished`.  The
+CSQC correctly waits forever for an attack that it can never reach, which
+suppresses the authoritative weapon sound without starting the predicted one.
+
+The player weapon paths schedule their next frame through the client clock;
+`PlayerPostThink` executes that callback at the scheduled client time and
+then restores the current value.  This is required for audio and animation
+prediction, not merely for projectile visuals.
+
 ## File map
 
 - `src/antilag.c`: rewind history, player and moving-world tracking, hitscan

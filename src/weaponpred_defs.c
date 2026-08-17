@@ -131,7 +131,6 @@ void WPredict_SendDefinitionsTo(gedict_t *player)
 			count++;
 		}
 	}
-
 	old_msg_entity = g_globalvars.msg_entity;
 	g_globalvars.msg_entity = EDICT_TO_PROG(player);
 	WriteByte(MSG_ONE_NORECORD, SVC_EZCSQC_SETUP);
