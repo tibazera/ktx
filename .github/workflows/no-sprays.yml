@@ -23,7 +23,7 @@ jobs:
             echo 'Spray source files are outside the Antilag 1 scope.' >&2
             exit 1
           fi
-          if git diff -- "$base" HEAD | grep -E 'MVD_PEXT1_SPRAYS|clc_spray|svc_spray|G_SPRAY(CLEAR|CLEARALL)'; then
+          if git diff "$base" HEAD -- . ':(exclude).github/workflows/no-sprays.yml' ':(exclude)ANTILAG1_PORT.md' | grep -E 'MVD_PEXT1_SPRAYS|clc_spray|svc_spray|G_SPRAY(CLEAR|CLEARALL)'; then
             echo 'Spray protocol or game hooks are outside the Antilag 1 scope.' >&2
             exit 1
           fi
