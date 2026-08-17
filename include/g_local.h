@@ -328,6 +328,7 @@ void WriteEntity(int to, gedict_t *ed);
 void WriteByte(int to, int data);
 void WriteShort(int to, int data);
 void WriteLong(int to, int data);
+void WriteFloat(int to, float data);
 void WriteString(int to, char *data);
 void WriteAngle(int to, float data);
 void WriteCoord(int to, float data);
@@ -594,6 +595,9 @@ void antilag_lagmove_all_hitscan(gedict_t *e);
 void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e);
 void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e);
 void antilag_unmove_all(void);
+void WPredict_Initialize(void);
+void WPredict_SendDefinitionsTo(gedict_t *player);
+void UpdateProjectileSendNeeded(void);
 void T_BeamDamage(gedict_t *attacker, float damage);
 
 //items.c

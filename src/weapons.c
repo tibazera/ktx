@@ -70,6 +70,75 @@ void W_Precache(void)
 void W_FireSpikes(float ox);
 void W_FireLightning(void);
 
+qbool SendEntity_Projectile(int sendflags)
+{
+	WriteByte(MSG_CSQC, EZCSQC_PROJECTILE);
+	if (self->pos1[0] == 0 && self->pos1[1] == 0 && self->pos1[2] == 0)
+	{
+		sendflags &= ~PROJECTILE_SPAWN_ORIGIN;
+	}
+	WriteByte(MSG_CSQC, sendflags);
+	if (sendflags & PROJECTILE_ORIGIN)
+	{
+		WriteCoord(MSG_CSQC, self->s.v.origin[0]);
+		WriteCoord(MSG_CSQC, self->s.v.origin[1]);
+		WriteCoord(MSG_CSQC, self->s.v.origin[2]);
+		WriteCoord(MSG_CSQC, self->s.v.velocity[0]);
+		WriteCoord(MSG_CSQC, self->s.v.velocity[1]);
+		WriteCoord(MSG_CSQC, self->s.v.velocity[2]);
+		WriteFloat(MSG_CSQC, g_globalvars.time);
+	}
+	if (sendflags & PROJECTILE_MODEL)
+	{
+		WriteShort(MSG_CSQC, self->s.v.modelindex);
+		WriteShort(MSG_CSQC, self->s.v.effects);
+	}
+	if (sendflags & PROJECTILE_ANGLES)
+	{
+		WriteAngle(MSG_CSQC, self->s.v.angles[0]);
+		WriteAngle(MSG_CSQC, self->s.v.angles[1]);
+		WriteAngle(MSG_CSQC, self->s.v.angles[2]);
+	}
+	if (sendflags & PROJECTILE_OWNER)
+	{
+		WriteEntity(MSG_CSQC, PROG_TO_EDICT(self->s.v.owner));
+	}
+	if (sendflags & PROJECTILE_SPAWN_ORIGIN)
+	{
+		WriteCoord(MSG_CSQC, self->pos1[0]);
+		WriteCoord(MSG_CSQC, self->pos1[1]);
+		WriteCoord(MSG_CSQC, self->pos1[2]);
+	}
+	return true;
+}
+
+static void ScheduleProjectileSendIfLive(gedict_t *projectile)
+{
+	if (!projectile || projectile == world || !projectile->s.v.modelindex)
+	{
+		return;
+	}
+	ExtFieldSetSendEntity(projectile, (func_t)SendEntity_Projectile);
+	SetSendNeeded(projectile, PROJECTILE_INITIAL, 0);
+}
+
+void UpdateProjectileSendNeeded(void)
+{
+	gedict_t *projectile;
+
+	for (projectile = world; (projectile = nextent(projectile));)
+	{
+		if (!projectile->isMissile || !projectile->s.v.modelindex || !projectile->SendEntity)
+		{
+			continue;
+		}
+		if (streq(projectile->classname, "grenade"))
+		{
+			SetSendNeeded(projectile, PROJECTILE_ORIGIN, 0);
+		}
+	}
+}
+
 /*
  ================
  W_FireAxe
@@ -1092,8 +1161,10 @@ void W_FireRocket(void)
 
 	// midair 
 	VectorCopy(self->s.v.origin, newmis->s.v.oldorigin);
+	VectorCopy(newmis->s.v.origin, newmis->pos1);
 	antilag_lagmove_all_proj(self, newmis);
 	antilag_unmove_all();
+	ScheduleProjectileSendIfLive(newmis);
 
 #ifdef BOT_SUPPORT
 	BotsRocketSpawned(newmis);
@@ -1452,8 +1523,10 @@ void W_FireGrenade(void)
 	setmodel(newmis, "progs/grenade.mdl");
 	setsize(newmis, 0, 0, 0, 0, 0, 0);
 	setorigin(newmis, PASSVEC3(self->s.v.origin));
+	VectorCopy(newmis->s.v.origin, newmis->pos1);
 	antilag_lagmove_all_proj_bounce(self, newmis);
 	antilag_unmove_all();
+	ScheduleProjectileSendIfLive(newmis);
 
 #ifdef BOT_SUPPORT
 	BotsGrenadeSpawned(newmis);
@@ -1489,6 +1562,7 @@ void launch_spike(vec3_t org, vec3_t dir)
 	setmodel(newmis, "progs/spike.mdl");
 	setsize(newmis, 0, 0, 0, 0, 0, 0);
 	setorigin(newmis, PASSVEC3(org));
+	VectorCopy(newmis->s.v.origin, newmis->pos1);
 
 	// Yawnmode: spikes velocity is 1800 instead of 1000
 	// - Molgrum
@@ -1685,6 +1759,7 @@ void W_FireSuperSpikes(void)
 	WriteByte( MSG_ONE, SVC_SMALLKICK);
 	antilag_lagmove_all_proj(self, newmis);
 	antilag_unmove_all();
+	ScheduleProjectileSendIfLive(newmis);
 }
 
 void W_FireSpikes(float ox)
@@ -1741,6 +1816,7 @@ void W_FireSpikes(float ox)
 	launch_spike(tmp, dir);
 	antilag_lagmove_all_proj(self, newmis);
 	antilag_unmove_all();
+	ScheduleProjectileSendIfLive(newmis);
 
 	g_globalvars.msg_entity = EDICT_TO_PROG(self);
 	WriteByte( MSG_ONE, SVC_SMALLKICK);
@@ -1830,6 +1906,7 @@ void W_SetCurrentAmmo(void)
 		case IT_AXE:
 			self->s.v.currentammo = 0;
 			self->weaponmodel = "progs/v_axe.mdl";
+			self->weapon_index = 0;
 			self->s.v.weaponframe = 0;
 			if (vw_enabled)
 			{
@@ -1840,6 +1917,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SHOTGUN:
 			self->s.v.currentammo = self->s.v.ammo_shells;
+			self->weapon_index = 1;
 			if (cvar("k_instagib_custom_models") && cvar("k_instagib"))
 			{
 				self->weaponmodel = "progs/v_coil.mdl";
@@ -1860,6 +1938,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SUPER_SHOTGUN:
 			self->s.v.currentammo = self->s.v.ammo_shells;
+			self->weapon_index = 2;
 			self->weaponmodel = "progs/v_shot2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_SHELLS;
@@ -1872,6 +1951,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_NAILGUN:
 			self->s.v.currentammo = self->s.v.ammo_nails;
+			self->weapon_index = 3;
 			self->weaponmodel = "progs/v_nail.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_NAILS;
@@ -1884,6 +1964,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SUPER_NAILGUN:
 			self->s.v.currentammo = self->s.v.ammo_nails;
+			self->weapon_index = 4;
 			self->weaponmodel = "progs/v_nail2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_NAILS;
@@ -1895,6 +1976,7 @@ void W_SetCurrentAmmo(void)
 			break;
 
 		case IT_GRENADE_LAUNCHER:
+			self->weapon_index = 5;
 			if (isCA())
 			{
 				self->s.v.currentammo = self->ca_ammo_grenades;
@@ -1915,6 +1997,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_ROCKET_LAUNCHER:
 			self->s.v.currentammo = self->s.v.ammo_rockets;
+			self->weapon_index = 6;
 			self->weaponmodel = "progs/v_rock2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_ROCKETS;
@@ -1927,6 +2010,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_LIGHTNING:
 			self->s.v.currentammo = self->s.v.ammo_cells;
+			self->weapon_index = 7;
 			self->weaponmodel = "progs/v_light.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_CELLS;
@@ -1958,6 +2042,7 @@ void W_SetCurrentAmmo(void)
 
 		default:
 			self->s.v.currentammo = 0;
+			self->weapon_index = 0;
 			self->weaponmodel = "";
 			self->s.v.weaponframe = 0;
 			self->vw_index = 0;
