@@ -1,6 +1,6 @@
 ../build/csprogs.dat
 #define CSQC
-fteextensions.qc
+antilag_csqc.qc
 
 
 weaponpred.qc
