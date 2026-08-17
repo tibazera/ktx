@@ -1906,7 +1906,7 @@ void W_SetCurrentAmmo(void)
 		case IT_AXE:
 			self->s.v.currentammo = 0;
 			self->weaponmodel = "progs/v_axe.mdl";
-			self->weapon_index = 0;
+			self->weapon_index = 1;
 			self->s.v.weaponframe = 0;
 			if (vw_enabled)
 			{
@@ -1917,7 +1917,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SHOTGUN:
 			self->s.v.currentammo = self->s.v.ammo_shells;
-			self->weapon_index = 1;
+			self->weapon_index = 2;
 			if (cvar("k_instagib_custom_models") && cvar("k_instagib"))
 			{
 				self->weaponmodel = "progs/v_coil.mdl";
@@ -1938,7 +1938,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SUPER_SHOTGUN:
 			self->s.v.currentammo = self->s.v.ammo_shells;
-			self->weapon_index = 2;
+			self->weapon_index = 3;
 			self->weaponmodel = "progs/v_shot2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_SHELLS;
@@ -1951,7 +1951,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_NAILGUN:
 			self->s.v.currentammo = self->s.v.ammo_nails;
-			self->weapon_index = 3;
+			self->weapon_index = 4;
 			self->weaponmodel = "progs/v_nail.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_NAILS;
@@ -1964,7 +1964,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_SUPER_NAILGUN:
 			self->s.v.currentammo = self->s.v.ammo_nails;
-			self->weapon_index = 4;
+			self->weapon_index = 5;
 			self->weaponmodel = "progs/v_nail2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_NAILS;
@@ -1976,7 +1976,7 @@ void W_SetCurrentAmmo(void)
 			break;
 
 		case IT_GRENADE_LAUNCHER:
-			self->weapon_index = 5;
+			self->weapon_index = 6;
 			if (isCA())
 			{
 				self->s.v.currentammo = self->ca_ammo_grenades;
@@ -1997,7 +1997,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_ROCKET_LAUNCHER:
 			self->s.v.currentammo = self->s.v.ammo_rockets;
-			self->weapon_index = 6;
+			self->weapon_index = 7;
 			self->weaponmodel = "progs/v_rock2.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_ROCKETS;
@@ -2010,7 +2010,7 @@ void W_SetCurrentAmmo(void)
 
 		case IT_LIGHTNING:
 			self->s.v.currentammo = self->s.v.ammo_cells;
-			self->weapon_index = 7;
+			self->weapon_index = 8;
 			self->weaponmodel = "progs/v_light.mdl";
 			self->s.v.weaponframe = 0;
 			items |= IT_CELLS;
@@ -2042,7 +2042,7 @@ void W_SetCurrentAmmo(void)
 
 		default:
 			self->s.v.currentammo = 0;
-			self->weapon_index = 0;
+			self->weapon_index = 1;
 			self->weaponmodel = "";
 			self->s.v.weaponframe = 0;
 			self->vw_index = 0;
