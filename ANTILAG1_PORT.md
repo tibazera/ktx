@@ -24,3 +24,20 @@ by default.  Antilag 1 must remain complete and usable without them.
   commit where practical.
 * Build `qwprogs.so` and `csprogs.dat` from the same source revision.
 * Keep normal Antilag 0/2 behaviour unchanged when `sv_antilag` is not 1.
+
+## File map
+
+- `src/antilag.c`: rewind history, player and moving-world tracking, hitscan
+  rewind, projectile catch-up and restore logic.
+- `src/client.c`, `src/doors.c`, `src/plats.c`, `src/world.c`: lifecycle and
+  per-frame state capture for players and moving world entities.
+- `src/weapons.c`: wraps the existing hitscan and projectile weapon paths in
+  rewind/restore boundaries.
+- `include/*` and `src/g_syscalls.*`: declare the compact runtime contract and
+  the `SetLastRuntime` extension used to avoid a duplicate engine advance.
+- `qcsrc/main.qc`, `qcsrc/weaponpred.qc`, `qcsrc/antilag_csqc.qc`: native CSQC
+  weapon prediction, simple projectiles, and only the CSQC declarations those
+  modules use. The generated general-purpose extension catalogue is not part
+  of this branch.
+
+The gamecode build and CSQC build are both validated from this exact revision.
