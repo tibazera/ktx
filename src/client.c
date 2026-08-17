@@ -1776,6 +1776,7 @@ void ClientConnect(void)
 	}
 
 	SendSpecInfo(NULL, self); // get all spectator info
+	self->antilag_data = antilag_create_player(self);
 
 	MakeMOTD();
 
@@ -3039,6 +3040,7 @@ void ClientDisconnect(void)
 	}
 
 	set_important_fields(self); // set classname == "" and etc
+	antilag_delete_player(self);
 
 // s: added conditional function call here
 	if (self->k_kicking)
@@ -4569,6 +4571,7 @@ void PlayerPostThink(void)
 #endif
 
 	W_WeaponFrame();
+	antilag_log(self, self->antilag_data);
 
 	race_player_post_think();
 

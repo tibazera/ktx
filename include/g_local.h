@@ -587,6 +587,7 @@ void T_RadiusDamage(gedict_t *inflictor, gedict_t *attacker, float damage, gedic
 					deathType_t dtype);
 void antilag_log(gedict_t *e, antilag_t *antilag);
 antilag_t *antilag_create_player(gedict_t *e);
+antilag_t *antilag_create_world(gedict_t *e);
 void antilag_delete_player(gedict_t *e);
 void antilag_updateworld(void);
 void T_BeamDamage(gedict_t *attacker, float damage);
