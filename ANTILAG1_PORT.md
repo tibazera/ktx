@@ -22,7 +22,10 @@ by default.  Antilag 1 must remain complete and usable without them.
 * Port only changes required for Antilag 1 and its matching CSQC support.
 * Keep each logical protocol, server and CSQC change reviewable in its own
   commit where practical.
-* Build `qwprogs.so` and `csprogs.dat` from the same source revision.
+* Keep the EZCSQC weapon-definition table and KTX's emitted weapon IDs in the
+  same revision. The current protocol reserves index zero and uses `1..8`.
+* Announce EZCSQC from KTX itself so compatible unezQuake clients negotiate it
+  without per-server configuration.
 * Keep normal Antilag 0/2 behaviour unchanged when `sv_antilag` is not 1.
 
 ## File map
