@@ -222,6 +222,7 @@ enum
 	G_SETEXTFIELDPTR,
 	G_GETEXTFIELDPTR,
 	G_SETSENDNEEDED,
+	G_SETLASTRUNTIME,
 	G_EXTENSIONS_LAST
 };
 extern qbool haveextensiontab[G_EXTENSIONS_LAST-G_EXTENSIONS_FIRST];
@@ -584,6 +585,10 @@ qbool CanDamage(gedict_t *targ, gedict_t *inflictor);
 void T_Damage(gedict_t *targ, gedict_t *inflictor, gedict_t *attacker, float damage);
 void T_RadiusDamage(gedict_t *inflictor, gedict_t *attacker, float damage, gedict_t *ignore,
 					deathType_t dtype);
+void antilag_log(gedict_t *e, antilag_t *antilag);
+antilag_t *antilag_create_player(gedict_t *e);
+void antilag_delete_player(gedict_t *e);
+void antilag_updateworld(void);
 void T_BeamDamage(gedict_t *attacker, float damage);
 
 //items.c
