@@ -79,6 +79,7 @@ void W_FireAxe(void)
 {
 	vec3_t source, dest;
 	vec3_t org;
+	antilag_lagmove_all_hitscan(self);
 
 	WS_Mark(self, wpAXE);
 
@@ -152,6 +153,7 @@ void W_FireAxe(void)
 		WriteCoord( MSG_MULTICAST, org[2]);
 		trap_multicast(PASSVEC3(org), MULTICAST_PVS);
 	}
+	antilag_unmove_all();
 }
 
 //============================================================================
@@ -545,6 +547,7 @@ void FireBullets(float shotcount, vec3_t dir, float spread_x, float spread_y, fl
 					deathType_t deathtype)
 {
 	vec3_t direction;
+	antilag_lagmove_all_hitscan(self);
 	vec3_t src, tmp, tmp2;
 	qbool classic_shotgun = cvar("k_classic_shotgun");
 	qbool non_random_bullets = (k_yawnmode
@@ -725,6 +728,7 @@ void FireBullets(float shotcount, vec3_t dir, float spread_x, float spread_y, fl
 	{
 		Multi_Finish();
 	}
+	antilag_unmove_all();
 }
 
 /*
@@ -1158,6 +1162,7 @@ void W_FireLightning(void)
 {
 	vec3_t org;
 	float cells;
+	antilag_lagmove_all_hitscan(self);
 	vec3_t tmp;
 
 	if ((self->s.v.ammo_cells < 1) || (match_in_progress == 1))
@@ -1275,6 +1280,7 @@ void W_FireLightning(void)
 // qqshka - not from 'self->s.v.origin' but from 'org'
 //	LightningDamage( self->s.v.origin, tmp, self, 30 );
 	LightningDamage(org, tmp, self, 30);
+	antilag_unmove_all();
 }
 
 //=============================================================================
