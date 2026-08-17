@@ -58,24 +58,24 @@ float autocvar_cl_predict_projectiles;
 typedef struct weapon_state
 {
 	int		state;
-	
+
 	int		impulse;
 	int		weapon;
 	int		items;
-	
+
 	int		frame;
-	
+
 	int		ammo_shells;
 	int		ammo_nails;
 	int		ammo_rockets;
 	int		ammo_cells;
-	
+
 	float	attack_finished;
 	float	client_time;
-	
+
 	float	client_nextthink;
 	int		client_thinkindex;
-	
+
 	int		client_predflags;
 	float	client_ping;
 };
@@ -123,11 +123,11 @@ float autocvar_cl_gunz;
 void WeaponPred_SetModel()
 {
 	self.origin = [autocvar_cl_gunz, -autocvar_cl_gunx, -autocvar_cl_guny];
-	
+
 	float oldframe = self.frame;
 	float oldmodel = self.modelindex;
-	
-	
+
+
 	switch (weapon_predicted.weapon)
 	{
 		case IT_AXE: 					self.modelindex = model_axe; break;
@@ -139,22 +139,22 @@ void WeaponPred_SetModel()
 		case IT_ROCKET_LAUNCHER: 		self.modelindex = model_rocketl; break;
 		case IT_LIGHTNING: 				self.modelindex = model_light; break;
 	}
-	
+
 	self.frame = weapon_predicted.frame;
-	
-	
-	
+
+
+
 	if (oldframe != self.frame)
 	{
 		self.frame2 = oldframe;
 		self.lerpfrac = 1;
 	}
-	
+
 	if (oldmodel != self.modelindex)
 	{
 		self.lerpfrac = 0;
 	}
-	
+
 	self.lerpfrac = max(0, self.lerpfrac - frametime * 10);
 }
 
@@ -164,13 +164,13 @@ void PredProjectile_Cleanup(entity who)
 {
 	if (predicted_projectiles == who)
 		predicted_projectiles = who._next;
-	
+
 	if (who._prev)
 		who._prev._next = who._next;
-	
+
 	if (who._next)
 		who._next._prev = who._prev;
-	
+
 	remove(who);
 }
 
@@ -184,10 +184,10 @@ float PredProjectile_Predraw()
 		PredProjectile_Cleanup(self);
 		return PREDRAW_NEXT;
 	}
-	
+
 	if (time < self.starttime || time > self.endtime)
 		return PREDRAW_NEXT;
-	
+
 	return Predraw_Projectile();
 }
 
@@ -195,26 +195,26 @@ float PredProjectile_Predraw()
 float PredProjectile_MatchProjectile()
 {
 	self.origin = (self.s_origin + self.velocity*(time - self.s_time));
-	
+
 	entity proj;
 	for(proj = predicted_projectiles; proj != __NULL__; proj = proj._next)
 	{
 		if (proj.modelindex != self.modelindex)
 			continue;
-		
+
 		float diff = vlen(proj.origin - self.origin);
 		if (diff > 32)
 			continue;
-		
+
 		if (fabs(time - (proj.endtime - 0.05)) > 0.04)
 			continue;
-		
+
 		self.oldorigin = proj.origin;
 		PredProjectile_Cleanup(proj);
-		
+
 		return TRUE;
 	}
-	
+
 	return FALSE;
 }
 
@@ -222,20 +222,20 @@ float PredProjectile_MatchProjectile()
 entity WeaponPred_CreateProjectile()
 {
 	entity proj = spawn();
-	
+
 	proj.starttime = time + max(ping_time - weapon_predicted.client_ping, 0);
 	proj.endtime = time + ping_time + 0.05;
 	proj.s_time = proj.starttime - 0.025;
-	
-	
+
+
 	proj.predraw = PredProjectile_Predraw;
 	proj.drawmask = MASK_ENGINE;
-	
+
 	proj._next = predicted_projectiles;
 	if (predicted_projectiles)
 		predicted_projectiles._prev = proj;
 	predicted_projectiles = proj;
-	
+
 	return proj;
 }
 
@@ -274,7 +274,7 @@ void PM_SoundEffect_Weapon(string sample, int chan, int weap)
 {
 	if (!is_effectframe)
 		return;
-	
+
 	if (autocvar_cl_predict_weaponsound == 0)
 		return;
 
@@ -590,9 +590,9 @@ void launch_spike(float off)
 		//newmis = PM_AddEvent_FakeProj(IT_NAILGUN);
 		PM_SoundEffect_Weapon("weapons/rocket1i.wav", 1, 16);
 	}
-	
-	
-	
+
+
+
 	if (is_effectframe && autocvar_cl_predict_projectiles && weapon_predicted.client_ping)
 	{
 		entity proj = WeaponPred_CreateProjectile();
@@ -606,10 +606,10 @@ void launch_spike(float off)
 		proj.s_origin[2] += 16;
 		proj.oldorigin = proj.s_origin + (0.05 * proj.velocity);
 		proj.origin = proj.oldorigin;
-		
-		
+
+
 		proj.velocity = 1000 * v_forward;
-		
+
 		proj.angles = input_angles; proj.angles[0] *= -1;
 	}
 }
@@ -739,8 +739,8 @@ void anim_lightning(void)
 		player_light1();
 	else
 		player_light2();
-	
-	
+
+
 	if (is_effectframe)
 	{
 		if (weapon_predicted.client_time >= t_width)
@@ -783,9 +783,9 @@ int W_CheckNoAmmo()
 		return TRUE;
 	else if (weapon_predicted.weapon == IT_LIGHTNING && weapon_predicted.ammo_cells >= 1)
 		return TRUE;
-	
+
 	//weapon_predicted.weapon = W_BestWeapon();
-	
+
 	//	drop the weapon down
 	return FALSE;
 }
@@ -839,7 +839,7 @@ void W_Attack(void)
 				weapon_predicted.attack_finished = weapon_predicted.client_time + 0.5;
 				PM_SoundEffect_Weapon("weapons/guncock.wav", 1, 4);
 			}
-			
+
 			weapon_predicted.client_thinkindex = 1;
 			anim_shotgun();
 		} break;
@@ -904,7 +904,7 @@ void W_Attack(void)
 			VectorCopy(pmove.cmd.angles, newmis->angles);
 			newmis->angles[0] = -newmis->angles[0];
 			*/
-			
+
 			if (is_effectframe && autocvar_cl_predict_projectiles && weapon_predicted.client_ping)
 			{
 				entity proj = WeaponPred_CreateProjectile();
@@ -916,11 +916,11 @@ void W_Attack(void)
 				proj.velocity = 1000 * v_forward;
 				proj.oldorigin = proj.s_origin + (0.05 * proj.velocity);
 				proj.origin = proj.oldorigin;
-				
+
 				proj.angles = input_angles; proj.angles[0] *= -1;
 			}
-			
-			
+
+
 			weapon_predicted.client_thinkindex = 1;
 			anim_rocket();
 		} break;
@@ -981,7 +981,7 @@ void WeaponPred_ImpulseCommands()
 {
 	if !(weapon_predicted.impulse)
 		return;
-	
+
 	int clear = FALSE;
 	if (((weapon_predicted.impulse >= 1) && (weapon_predicted.impulse <= 8)) || (weapon_predicted.impulse == 22))
 		clear = W_ChangeWeapon(weapon_predicted.impulse);
@@ -993,7 +993,7 @@ void WeaponPred_ImpulseCommands()
 	{
 		clear = CycleWeaponReverseCommand();
 	}
-	
+
 	if (clear)
 		weapon_predicted.impulse = 0;
 }
@@ -1004,8 +1004,8 @@ float WeaponPred_Think()
 {
 	weapon_server.items = getstatbits(STAT_ITEMS, 0, 23);
 	weapon_predicted = weapon_server;
-	
-	
+
+
 	int pframe = servercommandframe + 1;
 	int eframe = clientcommandframe;
 	for(; pframe <= eframe; pframe++)
@@ -1013,12 +1013,12 @@ float WeaponPred_Think()
 		int success = getinputstate(pframe);
 		if (!success || input_timelength <= 0)
 			break;
-		
+
 		makevectors(input_angles);
-		
+
 		if (chat_info)
 			input_buttons = 0;
-		
+
 		if (pframe == eframe-1 && pframe > last_effectframe)
 		{
 			is_effectframe = TRUE;
@@ -1026,13 +1026,13 @@ float WeaponPred_Think()
 		}
 		else
 			is_effectframe = FALSE;
-		
+
 		weapon_predicted.client_time += input_timelength;
-		
+
 		if (input_impulse)
 			weapon_predicted.impulse = input_impulse;
-		
-		
+
+
 		if (weapon_predicted.client_nextthink && weapon_predicted.client_time >= weapon_predicted.client_nextthink)
 		{
 			float held_client_time = weapon_predicted.client_time;
@@ -1042,20 +1042,20 @@ float WeaponPred_Think()
 			execute_clientthink();
 			weapon_predicted.client_time = held_client_time;
 		}
-		
-		
+
+
 		if (weapon_predicted.client_time >= weapon_predicted.attack_finished)
 		{
 			WeaponPred_ImpulseCommands();
-			
+
 			if (input_buttons & 1)
 				W_Attack();
 		}
 	}
-	
-	
+
+
 	WeaponPred_SetModel();
-	
+
 	return PREDRAW_AUTOADD;
 }
 
@@ -1066,9 +1066,9 @@ float WeaponPred_Think()
 void EntUpdate_WeaponPred(float is_new)
 {
 	float sendflags = ReadByte();
-	
+
 	weapon_server.state = WEPSTATE_FRESH;
-	
+
 	if (sendflags & 1)
 	{
 		weapon_server.impulse = ReadByte();
@@ -1083,7 +1083,7 @@ void EntUpdate_WeaponPred(float is_new)
 	if (sendflags & 16)
 		weapon_server.ammo_cells = ReadByte();
 
-	
+
 	if (sendflags & 32)
 	{
 		weapon_server.attack_finished = ReadFloat();
@@ -1102,7 +1102,7 @@ void EntUpdate_WeaponPred(float is_new)
 		weapon_server.client_predflags = ReadByte();
 		weapon_server.client_ping = ReadByte() / 1000;
 	}
-	
+
 	if (is_new)
 	{
 		self.drawmask = MASK_PRED_VIEWMODEL;
@@ -1110,18 +1110,3 @@ void EntUpdate_WeaponPred(float is_new)
 		self.renderflags = RF_VIEWMODEL;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

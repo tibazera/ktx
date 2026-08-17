@@ -725,10 +725,10 @@ Return true to say that you fully handled the tempentity. Return false to have t
 #if defined(CSQC) || defined(MENU)
 void(string cmdtext) GameCommand;
 #endif
-string(string uri, string method, string postdata, __in string requestheaders, __inout string responseheaders) Cef_GeneratePage;	/* Provides an entrypoint to generate pages for the CEF plugin from within QC. Headers are 
+string(string uri, string method, string postdata, __in string requestheaders, __inout string responseheaders) Cef_GeneratePage;	/* Provides an entrypoint to generate pages for the CEF plugin from within QC. Headers are
 -separated key/value pairs (use tokenizebyseparator). */
 #ifdef SSQC
-string(string uri, string method, string postdata, __in string requestheaders, __inout string responseheaders) HTTP_GeneratePage;	/* Provides an entrypoint to generate pages for pages requested over http (sv_port_tcp+net_enable_http). Headers are 
+string(string uri, string method, string postdata, __in string requestheaders, __inout string responseheaders) HTTP_GeneratePage;	/* Provides an entrypoint to generate pages for pages requested over http (sv_port_tcp+net_enable_http). Headers are
 -separated key/value pairs (use tokenizebyseparator). Return __NULL__ to let the engine handle it, an empty string for a 404, and any other text for a regular 200 response. */
 #endif
 #if defined(CSQC) || defined(SSQC)
@@ -2498,7 +2498,7 @@ float(entity skelent, string dollcmd, float animskel) skel_ragupdate = #281; /* 
 		 doll foo.doll : sets up the entity to use the named doll file
 		 dollstring TEXT : uses the doll file directly embedded within qc, with that extra prefix.
 		 cleardoll : uninstanciates the doll without destroying the skeletal object.
-		 animate 0.5 : specifies the strength of the ragdoll as a whole 
+		 animate 0.5 : specifies the strength of the ragdoll as a whole
 		 animatebody somebody 0.5 : specifies the strength of the ragdoll on a specific body (0 will disable ragdoll animations on that body).
 		 enablejoint somejoint 1 : enables (or disables) a joint. Disabling joints will allow the doll to shatter. */
 
