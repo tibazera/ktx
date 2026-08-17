@@ -591,6 +591,8 @@ antilag_t *antilag_create_world(gedict_t *e);
 void antilag_delete_player(gedict_t *e);
 void antilag_updateworld(void);
 void antilag_lagmove_all_hitscan(gedict_t *e);
+void antilag_lagmove_all_proj(gedict_t *owner, gedict_t *e);
+void antilag_lagmove_all_proj_bounce(gedict_t *owner, gedict_t *e);
 void antilag_unmove_all(void);
 void T_BeamDamage(gedict_t *attacker, float damage);
 

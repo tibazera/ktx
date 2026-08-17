@@ -1090,6 +1090,8 @@ void W_FireRocket(void)
 
 	// midair 
 	VectorCopy(self->s.v.origin, newmis->s.v.oldorigin);
+	antilag_lagmove_all_proj(self, newmis);
+	antilag_unmove_all();
 
 #ifdef BOT_SUPPORT
 	BotsRocketSpawned(newmis);
@@ -1444,6 +1446,8 @@ void W_FireGrenade(void)
 	setmodel(newmis, "progs/grenade.mdl");
 	setsize(newmis, 0, 0, 0, 0, 0, 0);
 	setorigin(newmis, PASSVEC3(self->s.v.origin));
+	antilag_lagmove_all_proj_bounce(self, newmis);
+	antilag_unmove_all();
 
 #ifdef BOT_SUPPORT
 	BotsGrenadeSpawned(newmis);
@@ -1673,6 +1677,8 @@ void W_FireSuperSpikes(void)
 	setsize(newmis, 0, 0, 0, 0, 0, 0);
 	g_globalvars.msg_entity = EDICT_TO_PROG(self);
 	WriteByte( MSG_ONE, SVC_SMALLKICK);
+	antilag_lagmove_all_proj(self, newmis);
+	antilag_unmove_all();
 }
 
 void W_FireSpikes(float ox)
@@ -1727,6 +1733,8 @@ void W_FireSpikes(float ox)
 	VectorAdd(tmp, self->s.v.origin, tmp);
 	tmp[2] += 16;
 	launch_spike(tmp, dir);
+	antilag_lagmove_all_proj(self, newmis);
+	antilag_unmove_all();
 
 	g_globalvars.msg_entity = EDICT_TO_PROG(self);
 	WriteByte( MSG_ONE, SVC_SMALLKICK);
